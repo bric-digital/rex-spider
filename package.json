@@ -21,6 +21,7 @@
         "./extension": "./src/extension.mts",
         "./browser": "./src/browser.mts",
         "./service-worker": "./src/service-worker.mts"
+        "./spider": "./src/spider.mts"
     },
     "scripts": {
         "build": "tsc",
