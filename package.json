@@ -1,5 +1,5 @@
 {
-    "name": "@bric/webmunk-spide",
+    "name": "@bric/webmunk-spider",
     "version": "0.0.1",
     "description": "Webmunk module that uses the extension to spider content from compatible sites.",
     "keywords": [
