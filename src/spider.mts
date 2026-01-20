@@ -1,12 +1,17 @@
 import $ from 'jquery'
 
 export class WebmunkContentSpider {
+
   urlMatches(url:string): boolean {
     return false
   }
 
   fetchResults() {
 
+  }
+
+  toString():string {
+    return 'WebmunkContentSpider'
   }
 }
 
