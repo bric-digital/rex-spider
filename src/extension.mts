@@ -34,7 +34,7 @@ class WebmunkSpiderExtensionModule extends WebmunkExtensionModule {
             '</div>' +
             '<div id="start_spidering">' +
             '<p>You are ready to begin. Please tap the button below to get started</p>' +
-            '<button id="start_spidering_btn" class="btn btn-primary">Begin%#8230;</button>' +
+            '<button id="start_spidering_btn" class="btn btn-primary">Begin&#8230;</button>' +
             '</div>' +
             '<div id="spidering_progress">' +
             '[progress bar]' +
