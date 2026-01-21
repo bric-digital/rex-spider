@@ -152,6 +152,9 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
   }
 
   handleMessage(message:any, sender:any, sendResponse:(response:any) => void):boolean {
+    console.log('[spider service-worker] MESSAGE')
+    console.log(message)
+
     if (message.messageType == 'checkSpidersReady') {
       const response = {
         issues:[],
