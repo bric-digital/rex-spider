@@ -100,14 +100,16 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
     chrome.webRequest.onCompleted.addListener(async function (details) {
       if (details.frameId > 0) {
         if (['sub_frame', 'main_frame'].includes(details.type)) {
-         chrome.scripting.executeScript({
-            target: {
-              tabId: details.tabId, // eslint-disable-line object-shorthand
-              allFrames: false,
-              frameIds: [details.frameId]
-            },
-            files: ['/js/spider/bundle.js']
-          })
+          self.setTimeout(() => {
+            chrome.scripting.executeScript({
+                target: {
+                  tabId: details.tabId, // eslint-disable-line object-shorthand
+                  allFrames: false,
+                  frameIds: [details.frameId]
+                },
+                files: ['/js/spider/bundle.js']
+              })
+          }, 2500);
         }
       }
     }, {
