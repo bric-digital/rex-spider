@@ -72,6 +72,8 @@ class WebmunkSpiderExtensionModule extends WebmunkExtensionModule {
           chrome.runtime.sendMessage({
             'messageType': 'checkSpidersNeedUpdate'
           }).then((needsUpdate:boolean) => {
+            console.log(`[spider extension] checkSpidersNeedUpdate: ${needsUpdate}`)
+
             if (needsUpdate) {
               $('#start_spidering_btn').off('click')
 

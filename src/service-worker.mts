@@ -210,12 +210,14 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
 
       const checkSpiderUpdates = (sendResponse) => {
         if (toCheck.length === 0) {
+          console.log(`needsUpdate: done`)
           sendResponse(response)
         } else {
           let spider = toCheck.pop()
 
           spider.checkNeedsUpdate()
             .then((needsUpdate:boolean) => {
+              console.log(`needsUpdate: ${needsUpdate}`)
               if (needsUpdate) {
                 response = true
 
