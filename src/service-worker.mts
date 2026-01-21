@@ -122,6 +122,9 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
       if (skip.includes(details.error)) {
         // Skip
       } else {
+        console.log(`[Spider] Error on request:`)
+        console.log(details)
+
         for (let i = 0; i < this.registeredSpiders.length; i++) {
           const spider:WebmunkSpider = this.registeredSpiders[i]
 
