@@ -268,6 +268,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
           continueSpidering(sendResponse)
 
           return
+        }
       }
 
       chrome.runtime.onMessage.addListener(updateListener)
