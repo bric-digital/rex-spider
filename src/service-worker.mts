@@ -164,6 +164,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
 
       const checkSpider = (sendResponse) => {
         if (toCheck.length === 0) {
+          console.log('all checked - on to next step')
           sendResponse(response)
         } else {
           let spider = toCheck.pop()

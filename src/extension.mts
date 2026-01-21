@@ -44,21 +44,19 @@ class WebmunkSpiderExtensionModule extends WebmunkExtensionModule {
   }
 
   activateInterface(uiDefinition:WebmunkUIDefinition):boolean {
-    console.log('activateInterface')
-    console.log(uiDefinition)
-
     const me = this  // eslint-disable-line @typescript-eslint/no-this-alias
 
     if (uiDefinition.identifier === 'spider') {
+      $('#outstanding_issues').hide()
+      $('#start_spidering').hide()
+      $('#spidering_progress').hide()
+
       chrome.runtime.sendMessage({
         'messageType': 'checkSpidersReady'
       }).then((response) => {
         console.log('checkSpidersReady:')
         console.log(response)
 
-        $('#outstanding_issues').hide()
-        $('#start_spidering').hide()
-        $('#spidering_progress').hide()
 
         if (response['issues'].length > 0) {
           let updatedHtml = ''
