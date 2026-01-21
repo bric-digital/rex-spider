@@ -93,6 +93,9 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
 
     chrome.webRequest.onCompleted.addListener(async function (details) {
       if (details.frameId > 0) {
+        console.log('DETAILS')
+        console.log(details)
+
         chrome.scripting.executeScript({
           target: {
             tabId: details.tabId, // eslint-disable-line object-shorthand
