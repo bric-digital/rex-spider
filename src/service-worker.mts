@@ -131,14 +131,14 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
         console.log(`[Spider] Error on request:`)
         console.log(details)
 
-        for (let i = 0; i < this.registeredSpiders.length; i++) {
-          const spider:WebmunkSpider = this.registeredSpiders[i]
+        // for (let i = 0; i < this.registeredSpiders.length; i++) {
+        //   const spider:WebmunkSpider = this.registeredSpiders[i]
 
-          if (spider.matchesUrl(details.url)) {
-            console.log(`[Spider / ${spider.name()}] Error on request:`)
-            console.log(details)
-          }
-        }
+        //   if (spider.matchesUrl(details.url)) {
+        //     console.log(`[Spider / ${spider.name()}] Error on request:`)
+        //     console.log(details)
+        //   }
+        // }
       }
     }, {
       urls: urlPatterns
