@@ -64,7 +64,7 @@ class WebmunkSpiderExtensionModule extends WebmunkExtensionModule {
           let updatedHtml = ''
 
           response['issues'].forEach((item, index) => {
-            updatedHtml += `<li><a href="$%{item.url}">${item.message}</li>\n`
+            updatedHtml += `<li><a href="${item.url}" target="_blank">${item.message}</li>\n`
           })
 
           $('#issue_list').html(updatedHtml)
