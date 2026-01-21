@@ -32,14 +32,14 @@ class WebmunkSpiderExtensionModule extends WebmunkExtensionModule {
             '<p>Please complete the following tasks:</p>' +
             '<ul id="issue_list"></ul>' +
             '</div>' +
-            '<div id="start_spidering">' +
+            '<div id="start_spidering" class="mb-3">' +
             '<p>You are ready to begin. Please tap the button below to get started</p>' +
             '<button id="start_spidering_btn" class="btn btn-primary">Begin&#8230;</button>' +
             '</div>' +
-            '<div id="spidering_progress">' +
+            '<div id="spidering_progress" class="mb-3">' +
             '[progress bar]' +
             '</div>' +
-            '<iframe id="spider_frame" style="display: block; height: 200px; width: 100%; opacity: 1.0; border: thin solid blue;"></iframe>' +
+            '<iframe id="spider_frame" style="display: block; height: 400px; width: 100%; opacity: 1.0; border: thin solid blue;"></iframe>' +
             '</div>'
   }
 
