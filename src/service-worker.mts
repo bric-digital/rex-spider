@@ -105,10 +105,10 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
 
     chrome.webRequest.onCompleted.addListener(async function (details) {
       if (details.frameId > 0) {
-        console.log('IFRAME')
-        console.log(details)
-
         if (['sub_frame', 'main_frame', 'script'].includes(details.type)) {
+          console.log('IFRAME')
+          console.log(details)
+
           self.setTimeout(() => {
             chrome.scripting.executeScript({
                 target: {
