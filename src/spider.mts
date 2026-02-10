@@ -1,8 +1,8 @@
 import $ from 'jquery'
 
-export class WebmunkContentSpider {
+export class REXContentSpider {
 
-  urlMatches(url:string): boolean {
+  urlMatches(url:string): boolean { // eslint-disable-line @typescript-eslint/no-unused-vars
     return false
   }
 
@@ -15,27 +15,27 @@ export class WebmunkContentSpider {
   }
 
   name():string {
-    return 'WebmunkContentSpider'
+    return 'REXContentSpider'
   }
 }
 
-class WebmunkContentSpiderManager {
-  registeredSpiders:WebmunkContentSpider[] = []
+class REXContentSpiderManager {
+  registeredSpiders:REXContentSpider[] = []
 
-  registerSpider(spider:WebmunkContentSpider) {
+  registerSpider(spider:REXContentSpider) {
     if (this.registeredSpiders.includes(spider) === false) {
       this.registeredSpiders.push(spider)
     }
   }
 
-  unregisterSpider(spider:WebmunkContentSpider) {
+  unregisterSpider(spider:REXContentSpider) {
     if (this.registeredSpiders.includes(spider)) {
       this.registeredSpiders = this.registeredSpiders.filter(item => item !== spider)
     }
   }
 
   fetchResults() {
-    this.registeredSpiders.forEach((spider, index) => {
+    this.registeredSpiders.forEach((spider, index) => { // eslint-disable-line @typescript-eslint/no-unused-vars
       if (spider.urlMatches(window.location.href)) {
         spider.fetchResults()
       }
@@ -43,11 +43,11 @@ class WebmunkContentSpiderManager {
   }
 
   toString():string {
-    return 'WebmunkContentSpiderManager'
+    return 'REXContentSpiderManager'
   }
 }
 
-const manager = new WebmunkContentSpiderManager()
+const manager = new REXContentSpiderManager()
 
 // TODO: Pull out into custom jQuery library?
 

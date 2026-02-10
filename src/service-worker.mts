@@ -1,14 +1,12 @@
-import { WebmunkConfiguration } from '@bric/webmunk-core/extension'
-import webmunkCorePlugin, { WebmunkServiceWorkerModule, registerWebmunkModule, dispatchEvent } from '@bric/webmunk-core/service-worker'
+import { REXConfiguration } from '@bric/rex-core/extension'
+import rexCorePlugin, { REXServiceWorkerModule, registerREXModule, dispatchEvent } from '@bric/rex-core/service-worker'
 
-export class WebmunkSpider {
+export class REXSpider {
   checkLogin(): Promise<boolean> {
     console.log('fecthing promise')
 
     return new Promise<boolean>((resolve) => {
-      const loginListener = (message:any, sender:any, sendResponse:(response:any) => void):boolean => {
-        console.log('loginListener')
-        console.log(message)
+      const loginListener = (message:any, sender:any, sendResponse:(response:any) => void):boolean => { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
         if (message.messageType === 'spiderLoginResults' && message.spiderName === this.name()) {
           if (message.loggedIn === false) {
             resolve(false)
@@ -23,8 +21,6 @@ export class WebmunkSpider {
 
         return false
       }
-
-      console.log('registered listener')
 
       chrome.runtime.onMessage.addListener(loginListener)
 
@@ -49,18 +45,18 @@ export class WebmunkSpider {
     return []
   }
 
-  processResults(url:string, results) {
+  processResults(url:string, results) { // eslint-disable-line @typescript-eslint/no-unused-vars
     return new Promise<void>((resolve) => {
       resolve()
     })
   }
 
-  matchesUrl(url:string): boolean {
+  matchesUrl(url:string): boolean { // eslint-disable-line @typescript-eslint/no-unused-vars
     return false
   }
 
   name():string {
-    return 'Webmunk Spider (Implement in subclasses)'
+    return 'REX Spider (Implement in subclasses)'
   }
 
   toString():string {
@@ -76,13 +72,13 @@ export class WebmunkSpider {
   }
 }
 
-export interface WebmunkSpiderPendingItem {
+export interface REXSpiderPendingItem {
   url: string,
-  spider: WebmunkSpider
+  spider: REXSpider
 }
 
-class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
-  registeredSpiders:WebmunkSpider[] = []
+class REXSpiderModule extends REXServiceWorkerModule {
+  registeredSpiders:REXSpider[] = []
 
   constructor() {
     super()
@@ -95,10 +91,10 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
   setup() {
     this.refreshConfiguration()
 
-    let urlPatterns = []
+    const urlPatterns = []
 
     for (let i = 0; i < this.registeredSpiders.length; i++) {
-      const spider:WebmunkSpider = this.registeredSpiders[i]
+      const spider:REXSpider = this.registeredSpiders[i]
 
       urlPatterns.push(...spider.urlPatterns())
     }
@@ -112,7 +108,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
           self.setTimeout(() => {
             chrome.scripting.executeScript({
                 target: {
-                  tabId: details.tabId, // eslint-disable-line object-shorthand
+                  tabId: details.tabId,
                   allFrames: false,
                   frameIds: [details.frameId]
                 },
@@ -135,7 +131,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
         console.log(details)
 
         // for (let i = 0; i < this.registeredSpiders.length; i++) {
-        //   const spider:WebmunkSpider = this.registeredSpiders[i]
+        //   const spider:REXSpider = this.registeredSpiders[i]
 
         //   if (spider.matchesUrl(details.url)) {
         //     console.log(`[Spider / ${spider.name()}] Error on request:`)
@@ -149,8 +145,8 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
   }
 
   refreshConfiguration() {
-    webmunkCorePlugin.fetchConfiguration()
-      .then((configuration:WebmunkConfiguration) => {
+    rexCorePlugin.fetchConfiguration()
+      .then((configuration:REXConfiguration) => {
         if (configuration !== undefined) {
           const spiderConfig = configuration['spider']
 
@@ -167,11 +163,11 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
       })
   }
 
-  updateConfiguration(config) {
+  updateConfiguration(config) { // eslint-disable-line @typescript-eslint/no-unused-vars
 
   }
 
-  handleMessage(message:any, sender:any, sendResponse:(response:any) => void):boolean {
+  handleMessage(message:any, sender:any, sendResponse:(response:any) => void):boolean { // eslint-disable-line @typescript-eslint/no-explicit-any
     console.log('[spider service-worker] MESSAGE')
     console.log(message)
 
@@ -181,7 +177,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
         ready: true
       }
 
-      let toCheck:WebmunkSpider[] = []
+      const toCheck:REXSpider[] = []
 
       toCheck.push(...this.registeredSpiders)
 
@@ -190,7 +186,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
           console.log('all checked - on to next step')
           sendResponse(response)
         } else {
-          let spider = toCheck.pop()
+          const spider = toCheck.pop()
 
           console.log(`checked ${spider} login`)
 
@@ -218,7 +214,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
     } else if (message.messageType == 'checkSpidersNeedUpdate') {
       let response: boolean = false
 
-      let toCheck:WebmunkSpider[] = []
+      const toCheck:REXSpider[] = []
 
       toCheck.push(...this.registeredSpiders)
 
@@ -227,11 +223,11 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
           console.log(`needsUpdate: done`)
           sendResponse(response)
         } else {
-          let spider = toCheck.pop()
+          const spider = toCheck.pop()
 
           spider.checkNeedsUpdate()
             .then((needsUpdate:boolean) => {
-              console.log(`needsUpdate: ${needsUpdate}`)
+              console.log(`needsUpdate: ${spider} ${needsUpdate}`)
               if (needsUpdate) {
                 response = true
 
@@ -245,11 +241,11 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
 
       return true
     } else if (message.messageType == 'startSpiders') {
-      let response: boolean = false
+      const response: boolean = false
 
-      let toCheck:WebmunkSpiderPendingItem[] = []
+      const toCheck:REXSpiderPendingItem[] = []
 
-      this.registeredSpiders.forEach((spider:WebmunkSpider) => {
+      this.registeredSpiders.forEach((spider:REXSpider) => {
           spider.fetchInitialUrls().forEach((url:string) => {
             toCheck.push({
               url,
@@ -262,7 +258,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
         if (toCheck.length === 0) {
           sendResponse(response)
         } else {
-          let spiderItem = toCheck.pop()
+          const spiderItem = toCheck.pop()
 
           chrome.runtime.sendMessage({
             messageType: 'spiderContent',
@@ -273,18 +269,18 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
 
       console.log('Setting up listener for spiderSources')
 
-      const updateListener = (message:any, sender:any, sendResponse:(response:any) => void):boolean => {
+      const updateListener = (message:any, sender:any, sendResponse:(response:any) => void):boolean => { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.log('updateListener MESSAGE')
         console.log(message)
 
         if (message.messageType === 'spiderSources') {
-          this.registeredSpiders.forEach((spider:WebmunkSpider) => {
+          this.registeredSpiders.forEach((spider:REXSpider) => {
             if (spider.name() === message.spiderName) {
               if (message.urls === undefined) {
                 message.urls = []
               }
 
-              for (let url of message.urls) {
+              for (const url of message.urls) {
                 console.log(`pushing ${url} for ${spider} to check...`)
 
                 toCheck.push({
@@ -300,7 +296,7 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
           return
         } else if (message.messageType === 'spiderResults') {
           dispatchEvent({
-            name: 'webmunk-spider-result',
+            name: 'rex-spider-result',
             source: message.spiderName,
             payload: message.payload
           })
@@ -321,21 +317,21 @@ class WebmunkSpiderModule extends WebmunkServiceWorkerModule {
     return false
   }
 
-  registerSpider(spider:WebmunkSpider) {
+  registerSpider(spider:REXSpider) {
     if (this.registeredSpiders.includes(spider) === false) {
       this.registeredSpiders.push(spider)
     }
   }
 
-  unregisterSpider(spider:WebmunkSpider) {
+  unregisterSpider(spider:REXSpider) {
     if (this.registeredSpiders.includes(spider)) {
       this.registeredSpiders = this.registeredSpiders.filter(item => item !== spider)
     }
   }
 }
 
-const plugin = new WebmunkSpiderModule()
+const plugin = new REXSpiderModule()
 
-registerWebmunkModule(plugin)
+registerREXModule(plugin)
 
 export default plugin
