@@ -217,9 +217,9 @@ class REXSpiderModule extends REXServiceWorkerModule {
             .then((needsUpdate:boolean) => {
               if (needsUpdate) {
                 response = true
-
-                checkSpiderUpdates(sendResponse)
               }
+
+              checkSpiderUpdates(sendResponse)
             })
         }
       }
