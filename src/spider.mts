@@ -1,7 +1,6 @@
 import $ from 'jquery'
 
 export class REXContentSpider {
-
   urlMatches(url:string): boolean { // eslint-disable-line @typescript-eslint/no-unused-vars
     return false
   }
@@ -51,9 +50,16 @@ const manager = new REXContentSpiderManager()
 
 // TODO: Pull out into custom jQuery library?
 
-$.expr.pseudos.trimmedTextEquals = $.expr.createPseudo((pattern) => {
-  return function(elem: Element) : boolean {
-    return ($(elem).text().match("^" + pattern + "$").length > 0)
+$.expr.pseudos.trimmedTextEquals = $.expr.createPseudo((pattern:string) => {
+  return function(elem:Element) : boolean {
+    const text:string = $(elem).text()
+    if (pattern !== null && text !== null) {
+      const matches = text.match("^" + pattern + "$")
+
+      return (matches !== null && matches.length > 0)
+    }
+
+    return false
   }
 })
 

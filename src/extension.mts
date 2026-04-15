@@ -1,6 +1,7 @@
 import $ from 'jquery'
 
 import { REXExtensionModule, registerREXModule, REXUIDefinition } from '@bric/rex-core/extension'
+import { REXSpiderIssue } from './service-worker.mjs'
 
 class REXSpiderExtensionModule extends REXExtensionModule {
   setup() {
@@ -66,7 +67,7 @@ class REXSpiderExtensionModule extends REXExtensionModule {
         if (response['issues'].length > 0) {
           let updatedHtml = ''
 
-          response['issues'].forEach((item, index) => { // eslint-disable-line @typescript-eslint/no-unused-vars
+          response['issues'].forEach((item:REXSpiderIssue, index:number) => { // eslint-disable-line @typescript-eslint/no-unused-vars
             updatedHtml += `<li><a href="${item.url}" target="_blank">${item.message}</li>\n`
           })
 
