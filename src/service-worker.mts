@@ -1,6 +1,11 @@
 import { REXConfiguration } from '@bric/rex-core/extension'
 import rexCorePlugin, { REXServiceWorkerModule, registerREXModule, dispatchEvent } from '@bric/rex-core/service-worker'
 
+export interface REXSpiderIssue {
+  url: string,
+  message: string
+}
+
 export class REXSpider {
   checkLogin(): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
@@ -43,7 +48,7 @@ export class REXSpider {
     return []
   }
 
-  processResults(url:string, results) { // eslint-disable-line @typescript-eslint/no-unused-vars
+  processResults(url:string, results:any) { // eslint-disable-line @typescript-eslint/no-unused-vars,@typescript-eslint/no-explicit-any
     return new Promise<void>((resolve) => {
       resolve()
     })
@@ -145,7 +150,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
     rexCorePlugin.fetchConfiguration()
       .then((configuration:REXConfiguration) => {
         if (configuration !== undefined) {
-          const spiderConfig = configuration['spider']
+          const spiderConfig = (configuration as any)['spider'] // eslint-disable-line @typescript-eslint/no-explicit-any
 
           if (spiderConfig !== undefined) {
             this.updateConfiguration(spiderConfig)
@@ -160,14 +165,16 @@ class REXSpiderModule extends REXServiceWorkerModule {
       })
   }
 
-  updateConfiguration(config) { // eslint-disable-line @typescript-eslint/no-unused-vars
+  updateConfiguration(config:REXConfiguration) { // eslint-disable-line @typescript-eslint/no-unused-vars
 
   }
 
   handleMessage(message:any, sender:any, sendResponse:(response:any) => void):boolean { // eslint-disable-line @typescript-eslint/no-explicit-any
     if (message.messageType == 'checkSpidersReady') {
+      const issues:REXSpiderIssue[] = []
+
       const response = {
-        issues:[],
+        issues,
         ready: true
       }
 
@@ -175,25 +182,27 @@ class REXSpiderModule extends REXServiceWorkerModule {
 
       toCheck.push(...this.registeredSpiders)
 
-      const checkSpider = (sendResponse) => {
+      const checkSpider = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (toCheck.length === 0) {
           sendResponse(response)
         } else {
           const spider = toCheck.pop()
 
-          spider.checkLogin()
-            .then((ready:boolean) => {
-              if (ready === false) {
-                response.issues.push({
-                  message: `${spider.name()}: Login required.`,
-                  url: spider.loginUrl()
-                })
+          if (spider !== undefined) {
+            spider.checkLogin()
+              .then((ready:boolean) => {
+                if (ready === false) {
+                  response.issues.push({
+                    message: `${spider.name()}: Login required.`,
+                    url: spider.loginUrl()
+                  })
 
-                response.ready = false
-              }
+                  response.ready = false
+                }
 
-              checkSpider(sendResponse)
-            })
+                checkSpider(sendResponse)
+              })
+          }
         }
       }
 
@@ -207,20 +216,22 @@ class REXSpiderModule extends REXServiceWorkerModule {
 
       toCheck.push(...this.registeredSpiders)
 
-      const checkSpiderUpdates = (sendResponse) => {
+      const checkSpiderUpdates = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (toCheck.length === 0) {
           sendResponse(response)
         } else {
           const spider = toCheck.pop()
 
-          spider.checkNeedsUpdate()
-            .then((needsUpdate:boolean) => {
-              if (needsUpdate) {
-                response = true
+          if (spider !== undefined) {
+            spider.checkNeedsUpdate()
+              .then((needsUpdate:boolean) => {
+                if (needsUpdate) {
+                  response = true
 
-                checkSpiderUpdates(sendResponse)
-              }
-            })
+                  checkSpiderUpdates(sendResponse)
+                }
+              })
+          }
         }
       }
 
@@ -241,16 +252,18 @@ class REXSpiderModule extends REXServiceWorkerModule {
           })
       })
 
-      const continueSpidering = (sendResponse) => {
+      const continueSpidering = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (toCheck.length === 0) {
           sendResponse(response)
         } else {
           const spiderItem = toCheck.pop()
 
-          chrome.runtime.sendMessage({
-            messageType: 'spiderContent',
-            url: spiderItem.url
-          })
+          if (spiderItem !== undefined) {
+            chrome.runtime.sendMessage({
+              messageType: 'spiderContent',
+              url: spiderItem.url
+            })
+          }
         }
       }
 
@@ -275,7 +288,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
 
           continueSpidering(sendResponse)
 
-          return
+          return true
         } else if (message.messageType === 'spiderResults') {
           dispatchEvent({
             name: 'rex-spider-result',
@@ -285,8 +298,10 @@ class REXSpiderModule extends REXServiceWorkerModule {
 
           continueSpidering(sendResponse)
 
-          return
+          return true
         }
+
+        return false
       }
 
       chrome.runtime.onMessage.addListener(updateListener)
