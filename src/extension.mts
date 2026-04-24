@@ -1,6 +1,7 @@
 import $ from 'jquery'
 
-import { REXExtensionModule, registerREXModule, REXUIDefinition } from '@bric/rex-core/extension'
+import { REXUIDefinition } from '@bric/rex-core/common'
+import { REXExtensionModule, registerREXModule } from '@bric/rex-core/extension'
 import { REXSpiderIssue } from './service-worker.mjs'
 
 class REXSpiderExtensionModule extends REXExtensionModule {

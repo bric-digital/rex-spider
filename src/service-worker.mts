@@ -1,4 +1,4 @@
-import { REXConfiguration } from '@bric/rex-core/extension'
+import { REXConfiguration } from '@bric/rex-core/common'
 import rexCorePlugin, { REXServiceWorkerModule, registerREXModule, dispatchEvent } from '@bric/rex-core/service-worker'
 
 export interface REXSpiderIssue {
@@ -94,7 +94,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
   setup() {
     this.refreshConfiguration()
 
-    const urlPatterns = []
+    const urlPatterns:string[] = []
 
     for (let i = 0; i < this.registeredSpiders.length; i++) {
       const spider:REXSpider = this.registeredSpiders[i]
