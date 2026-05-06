@@ -216,7 +216,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
 
       toCheck.push(...this.registeredSpiders)
 
-      const checkSpiderUpdates = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+     const checkSpiderUpdates = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (toCheck.length === 0) {
           sendResponse(response)
         } else {
@@ -241,7 +241,11 @@ class REXSpiderModule extends REXServiceWorkerModule {
     } else if (message.messageType == 'startSpiders') {
       const response: boolean = false
 
+      console.log('1')
+
       const toCheck:REXSpiderPendingItem[] = []
+
+      console.log('2')
 
       this.registeredSpiders.forEach((spider:REXSpider) => {
           spider.fetchInitialUrls().forEach((url:string) => {
@@ -251,6 +255,8 @@ class REXSpiderModule extends REXServiceWorkerModule {
             })
           })
       })
+
+      console.log('3')
 
       const continueSpidering = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (toCheck.length === 0) {
@@ -266,6 +272,8 @@ class REXSpiderModule extends REXServiceWorkerModule {
           }
         }
       }
+
+      console.log('4')
 
       const updateListener = (message:any, sender:any, sendResponse:(response:any) => void):boolean => { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (message.messageType === 'spiderSources') {
@@ -304,9 +312,15 @@ class REXSpiderModule extends REXServiceWorkerModule {
         return false
       }
 
+      console.log('5')
+
       chrome.runtime.onMessage.addListener(updateListener)
 
+      console.log('6')
+
       continueSpidering(sendResponse)
+
+      console.log('7')
 
       return true
     }
