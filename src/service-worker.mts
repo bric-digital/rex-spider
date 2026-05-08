@@ -193,7 +193,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
               .then((ready:boolean) => {
                 if (ready === false) {
                   response.issues.push({
-                    message: `${spider.name()}: Login required.`,
+                    message: `${spider.name()}: Login required. Please log in as soon as possible.`,
                     url: spider.loginUrl()
                   })
 
