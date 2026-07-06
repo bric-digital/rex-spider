@@ -263,6 +263,63 @@ export class REXSpider {
   urlPatterns():string[] {
     return []
   }
+
+  // The oldest timestamp (ms epoch) this spider should collect down to, or null
+  // for no floor (collect as far back as the source allows). Driven by server
+  // config under `spider`:
+  //   collection_floor_date: an absolute date string (takes precedence), or
+  //   collection_floor_days: N days before install — install time comes from
+  //     rex-core's getInstallTime message (null if the running rex-core predates
+  //     that message, in which case there is no floor).
+  // A subclass calls this once at the start of a run and stops paging when an
+  // item is older than the returned value, then signals account completion.
+  collectionFloorMs():Promise<number | null> {
+    return rexCorePlugin.fetchConfiguration()
+      .then((configuration:REXConfiguration) => {
+        const spiderConfig = (((configuration ?? {}) as any)['spider'] ?? {}) // eslint-disable-line @typescript-eslint/no-explicit-any
+
+        const floorDate = spiderConfig['collection_floor_date']
+        if (typeof floorDate === 'string' && floorDate.length > 0) {
+          const parsed = Date.parse(floorDate)
+          return Number.isNaN(parsed) ? null : parsed
+        }
+
+        const floorDays = spiderConfig['collection_floor_days']
+        if (typeof floorDays === 'number' && floorDays > 0) {
+          return new Promise<number | null>((resolve) => {
+            const handled = rexCorePlugin.handleMessage({ messageType: 'getInstallTime' }, this, (installTime:number | null) => {
+              if (typeof installTime === 'number') {
+                resolve(installTime - (floorDays * 24 * 60 * 60 * 1000))
+              } else {
+                resolve(null)
+              }
+            })
+
+            if (handled !== true) {
+              resolve(null) // rex-core without getInstallTime: no floor available
+            }
+          })
+        }
+
+        return null
+      })
+  }
+
+  // Signals that this spider has collected everything in scope — either it
+  // paged back to the end of the account ('exhausted') or it reached the
+  // configured collection floor ('date-floor'). This is distinct from the
+  // per-run *-complete event, which fires at the end of every pass regardless
+  // of whether the account is fully captured.
+  signalAccountComplete(details:object = {}):void {
+    dispatchEvent({
+      name: 'pdk-app-event',
+      event_name: `rex-spider-${this.name().toLowerCase()}-account-complete`,
+      event_details: {
+        ...details,
+        date: Date.now()
+      }
+    })
+  }
 }
 
 export interface REXSpiderPendingItem {
