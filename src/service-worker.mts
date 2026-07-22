@@ -228,7 +228,10 @@ export class REXSpider {
     })
   }
 
-  checkNeedsUpdate(): Promise<boolean> {
+  // force: bypass the per-spider sync-period cooldown (offboarding's one-shot
+  // "collect everything now" trigger passes true). The in-flight `syncing`
+  // guard is NOT bypassed — a run already in progress emits its own completion.
+  checkNeedsUpdate(force: boolean = false): Promise<boolean> { // eslint-disable-line @typescript-eslint/no-unused-vars
     return new Promise<boolean>((resolve) => {
       resolve(false)
     })
@@ -464,6 +467,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
       return true
     } else if (message.messageType == 'checkSpidersNeedUpdate') {
       let response: boolean = false
+      const force: boolean = message.force === true
 
       const toCheck:REXSpider[] = []
 
@@ -476,7 +480,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
           const spider = toCheck.pop()
 
           if (spider !== undefined) {
-            spider.checkNeedsUpdate()
+            spider.checkNeedsUpdate(force)
               .then((needsUpdate:boolean) => {
                 if (needsUpdate) {
                   response = true
