@@ -273,6 +273,10 @@ export class REXSpider {
     return []
   }
 
+  whitelistedUrls():string[] {
+    return []
+  }
+
   // The oldest timestamp (ms epoch) this spider should collect down to, or null
   // for no floor (collect as far back as the source allows). Driven by server
   // config under `spider`:
@@ -616,6 +620,20 @@ class REXSpiderModule extends REXServiceWorkerModule {
       }
 
       startNextCrawl(sendResponse)
+
+      return true
+    } else if (message.messageType === 'fetchWhitelistURLs') {
+      const whitelistedUrls:string[] = []
+
+      for (const spider of this.registeredSpiders) {
+        for (const url of spider.whitelistedUrls()) {
+          if (whitelistedUrls.includes(url) === false) {
+            whitelistedUrls.push(url)
+          }
+        }
+      }
+
+      sendResponse(whitelistedUrls)
 
       return true
     }
