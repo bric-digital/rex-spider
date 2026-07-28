@@ -6,6 +6,11 @@ export interface REXSpiderIssue {
   message: string
 }
 
+export interface REXSpiderCrawlResult {
+  sitesCrawled: string[],
+  issues: REXSpiderIssue[]
+}
+
 // Default idle threshold (ms) before a spider run is declared stuck.
 // Sized for slow networks: 30 intervals of the default 10s sleep_delay_ms,
 // plus headroom for a single very slow fetch on a bad connection.
@@ -252,6 +257,10 @@ export class REXSpider {
     return 'REX Spider (Implement in subclasses)'
   }
 
+  identifier():string {
+    return 'rex-spider'
+  }
+
   toString():string {
     return this.name()
   }
@@ -318,6 +327,15 @@ export class REXSpider {
         ...details,
         date: Date.now()
       }
+    })
+  }
+
+  doBackgroundCrawl():Promise<REXSpiderCrawlResult> {
+    return new Promise<REXSpiderCrawlResult>((resolve) => {
+      resolve({
+        sitesCrawled: [],
+        issues: []
+      })
     })
   }
 }
@@ -560,6 +578,44 @@ class REXSpiderModule extends REXServiceWorkerModule {
       chrome.runtime.onMessage.addListener(updateListener)
 
       continueSpidering(sendResponse)
+
+      return true
+    } else if (message.messageType == 'beginBackgroundCrawls') {
+      // Cleaning up code to make it more explicit which operations are being run when.
+
+      const response:REXSpiderCrawlResult = {
+        sitesCrawled: [],
+        issues: []
+      }
+
+      const toCheck:REXSpider[] = []
+
+      toCheck.push(...this.registeredSpiders)
+
+      const startNextCrawl = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (toCheck.length === 0) {
+          sendResponse(response)
+        } else {
+          const spider = toCheck.pop()
+
+          if (spider !== undefined) {
+            spider.doBackgroundCrawl()
+              .then((result:REXSpiderCrawlResult) => {
+                if (response.sitesCrawled.includes(spider.identifier()) === false) {
+                  response.sitesCrawled.push(spider.identifier())
+                }
+
+                for (const issue of result.issues) {
+                  response.issues.push(issue)
+                }
+
+                startNextCrawl(sendResponse)
+              })
+          }
+        }
+      }
+
+      startNextCrawl(sendResponse)
 
       return true
     }
