@@ -273,7 +273,7 @@ export class REXSpider {
     return []
   }
 
-  whitelistedUrls():string[] {
+  allowedUrls():string[] {
     return []
   }
 
@@ -622,18 +622,18 @@ class REXSpiderModule extends REXServiceWorkerModule {
       startNextCrawl(sendResponse)
 
       return true
-    } else if (message.messageType === 'fetchWhitelistURLs') {
-      const whitelistedUrls:string[] = []
+    } else if (message.messageType === 'fetchAllowedURLs') {
+      const allowedUrls:string[] = []
 
       for (const spider of this.registeredSpiders) {
-        for (const url of spider.whitelistedUrls()) {
-          if (whitelistedUrls.includes(url) === false) {
-            whitelistedUrls.push(url)
+        for (const url of spider.allowedUrls()) {
+          if (allowedUrls.includes(url) === false) {
+            allowedUrls.push(url)
           }
         }
       }
 
-      sendResponse(whitelistedUrls)
+      sendResponse(allowedUrls)
 
       return true
     }
