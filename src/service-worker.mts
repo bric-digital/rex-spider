@@ -19,6 +19,10 @@ export class REXSpider {
   private endCrawl: number | null = null
   private timeAnchor: 'install' | 'runtime' | 'absolute' = 'runtime'
 
+  private sleepDuration: number = 300000 // 5 minutes
+
+  private crawling: boolean = false
+
   updateConfiguration(configuration:REXSpiderConfiguration) {
     if (configuration.enabled !== undefined) {
       this.enabled = configuration.enabled
@@ -33,12 +37,53 @@ export class REXSpider {
     }
 
     if (configuration['time_anchor'] !== undefined) {
-      this.timeAnchor = configuration.['time_anchor']
+      this.timeAnchor = configuration['time_anchor']
     }
   }
 
   isEnabled(): boolean {
     return this.enabled
+  }
+
+  isCrawling(): boolean {
+    return this.crawling
+  }
+
+  private prepareCrawl() {
+    const storeMessage = {
+      messageType: 'storeValue',
+      key: `rex-spider-${this.identifier()}-last-crawl`,
+      value: Date.now()
+    }
+
+    rexCorePlugin.handleMessage(storeMessage, this, (response) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
+      this.crawling = true
+    })
+  }
+
+  sleepElapsed(): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      const fetchLastCrawl = {
+        messageType: 'fetchValue',
+        key: `rex-spider-${this.identifier()}-last-crawl`
+      }
+
+      rexCorePlugin.handleMessage(fetchLastCrawl, this, (response) => {
+        let lastCrawlStarted = 0 
+
+        if (response !== null) {
+          lastCrawlStarted = response
+        }
+
+        const now: number = Date.now()
+
+        if ((now - lastCrawlStarted) > this.sleepDuration) {
+          resolve(true)
+        }
+
+        resolve(false)
+      })
+    })
   }
 
   crawlWindowStart(): Promise<number | null> {
@@ -50,7 +95,7 @@ export class REXSpider {
           messageType: 'getInstallTime'
         }
 
-        rexCorePlugin.handleMessage(message, this, (response: any) => {
+        rexCorePlugin.handleMessage(message, this, (response: number | null) => {
           if (response === null || this.startCrawl === null) {
             resolve(null)
           } else {
@@ -62,7 +107,7 @@ export class REXSpider {
       } else if (this.timeAnchor === 'absolute') {
         resolve(this.startCrawl)
       } else { // 'runtime'
-        resolve(Math.floor((Date.now() + this.startCrawl))
+        resolve(Date.now() + this.startCrawl)
       }
     })
   }
@@ -76,7 +121,7 @@ export class REXSpider {
           messageType: 'getInstallTime'
         }
 
-        rexCorePlugin.handleMessage(message, this, (response: any) => {
+        rexCorePlugin.handleMessage(message, this, (response: number | null) => {
           if (response === null || this.endCrawl === null) {
             resolve(null)
           } else {
@@ -88,7 +133,7 @@ export class REXSpider {
       } else if (this.timeAnchor === 'absolute') {
         resolve(this.endCrawl)
       } else { // 'runtime'
-        resolve(Math.floor((Date.now() + this.endCrawl))
+        resolve(Date.now() + this.endCrawl)
       }
     })
   }
@@ -174,11 +219,59 @@ export class REXSpider {
     })
   }
 
+  signalCrawlComplete(crawledCount: number, crawledIds: string[] = [], reason:string = 'None given') {
+    dispatchEvent({
+      name: 'pdk-app-event',
+      event_name: `rex-spider-${this.identifier()}-complete`,
+      event_details: {
+        crawled_count: crawledCount,
+        crawled_ids: crawledIds,
+        reason,
+        date: Date.now() + 1000
+      }
+    })
+
+    this.crawling = false
+  }
+
   doBackgroundCrawl():Promise<REXSpiderCrawlResult> {
+    this.prepareCrawl()
+
     return new Promise<REXSpiderCrawlResult>((resolve) => {
       resolve({
         sitesCrawled: [],
         issues: []
+      })
+    })
+  }
+
+  checkIfAlreadyTransmitted(uploadKey:string): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      const fetchTransmission = {
+        messageType: 'fetchValue',
+        key: uploadKey
+      }
+
+      rexCorePlugin.handleMessage(fetchTransmission, this, (response) => {
+        if (response !== null) {
+          resolve(true)
+        } else {
+          resolve(false)
+        }
+      })
+    })
+  }
+
+  logTransmitted(uploadKey): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const logTimestamp = {
+        messageType: 'storeValue',
+        key: uploadKey,
+        value: Date.now()
+      }
+
+      rexCorePlugin.handleMessage(logTimestamp, this, (response) => { // eslint-disable-line @typescript-eslint/no-unused-vars
+        resolve()
       })
     })
   }
@@ -248,7 +341,13 @@ class REXSpiderModule extends REXServiceWorkerModule {
       const toCheck:REXSpider[] = []
 
       for (const spider of this.registeredSpiders) {
-        if (spider.isEnabled()) {
+        if (spider.isEnabled() == false) {
+          // Do not log - spider is disabled.
+        } else if (spider.isCrawling()) {
+          console.log(`[rex-spider: ${spider.identifier()}] Still crawling. Skipping this round...`)
+
+          spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Still crawling.`)
+        } else {
           toCheck.push(spider)
         }
       }
@@ -261,19 +360,27 @@ class REXSpiderModule extends REXServiceWorkerModule {
 
           if (spider !== undefined) {
             // TODO: wrap call in watchdog / interruptable container.
-            
-            spider.doBackgroundCrawl()
-              .then((result:REXSpiderCrawlResult) => {
-                if (response.sitesCrawled.includes(spider.identifier()) === false) {
-                  response.sitesCrawled.push(spider.identifier())
-                }
 
-                for (const issue of result.issues) {
-                  response.issues.push(issue)
-                }
+            spider.sleepElapsed().then(() => {
+              spider.doBackgroundCrawl()
+                .then((result:REXSpiderCrawlResult) => {
+                  if (response.sitesCrawled.includes(spider.identifier()) === false) {
+                    response.sitesCrawled.push(spider.identifier())
+                  }
 
-                startNextCrawl(sendResponse)
-              })
+                  for (const issue of result.issues) {
+                    response.issues.push(issue)
+                  }
+
+                  startNextCrawl(sendResponse)
+                })
+            }).catch(() => {
+              console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
+  
+              spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Too soon to crawl again.`)
+
+              startNextCrawl(sendResponse)
+            })
           }
         }
       }
