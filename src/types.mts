@@ -6,5 +6,7 @@ export interface REXSpiderConfiguration {
 }
 
 export interface REXSpiderModuleConfiguration {
-    [id:string]: REXSpiderConfiguration
+    spiders: {
+        [key:string]: REXSpiderConfiguration
+    }
 }

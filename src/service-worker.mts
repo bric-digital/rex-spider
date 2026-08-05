@@ -262,7 +262,7 @@ export class REXSpider {
     })
   }
 
-  logTransmitted(uploadKey): Promise<void> {
+  logTransmitted(uploadKey:string): Promise<void> {
     return new Promise<void>((resolve) => {
       const logTimestamp = {
         messageType: 'storeValue',
