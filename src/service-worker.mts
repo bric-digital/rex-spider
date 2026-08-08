@@ -138,6 +138,24 @@ export class REXSpider {
     })
   }
 
+  crawlWindowContains(timestamp:number): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      this.crawlWindowStart().then((startTime:number | null) => {
+        if (startTime !== null && timestamp < startTime) {
+          resolve(false)
+        } else {
+          this.crawlWindowEnd().then((endTime:number | null) => {
+            if (endTime !== null && timestamp > endTime) {
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      })
+    })
+  }
+
   checkLogin(): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       const loginListener = (message:any, sender:any, sendResponse:(response:any) => void):boolean => { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
