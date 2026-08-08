@@ -21,6 +21,8 @@ export class REXSpider {
 
   private sleepDuration: number = 300000 // 5 minutes
 
+  private crawlDelay: number = 30000
+
   private crawling: boolean = false
 
   updateConfiguration(configuration:REXSpiderConfiguration) {
@@ -39,10 +41,18 @@ export class REXSpider {
     if (configuration['time_anchor'] !== undefined) {
       this.timeAnchor = configuration['time_anchor']
     }
+
+    if (configuration['crawl_delay'] !== undefined) {
+      this.crawlDelay = configuration['crawl_delay']
+    }
   }
 
   isEnabled(): boolean {
     return this.enabled
+  }
+
+  fetchCrawlDelay(): number {
+    return this.crawlDelay
   }
 
   isCrawling(): boolean {
