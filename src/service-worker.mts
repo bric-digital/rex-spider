@@ -394,10 +394,11 @@ class REXSpiderModule extends REXServiceWorkerModule {
           const spider = toCheck.pop()
 
           if (spider !== undefined) {
-            // TODO: wrap call in watchdog / interruptable container.
+            console.log(`[rex-spider: ${spider.identifier()}] Starting crawl...`)
 
             spider.sleepElapsed().then((elapsed:boolean) => {
               if (elapsed) {
+
                 spider.doBackgroundCrawl()
                   .then((result:REXSpiderCrawlResult) => {
                     if (response.sitesCrawled.includes(spider.identifier()) === false) {
@@ -407,6 +408,8 @@ class REXSpiderModule extends REXServiceWorkerModule {
                     for (const issue of result.issues) {
                       response.issues.push(issue)
                     }
+
+                    console.log(`[rex-spider: ${spider.identifier()}] Finished crawl...`)
 
                     startNextCrawl(sendResponse)
                   })
