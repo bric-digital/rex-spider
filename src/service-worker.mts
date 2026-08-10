@@ -376,18 +376,22 @@ class REXSpiderModule extends REXServiceWorkerModule {
       const toCheck:REXSpider[] = []
 
       for (const spider of this.registeredSpiders) {
-        if (spider.isEnabled() == false) {
+        if (spider.isEnabled() === false) {
           // Do not log - spider is disabled.
         } else if (spider.isCrawling()) {
           console.log(`[rex-spider: ${spider.identifier()}] Still crawling. Skipping this round...`)
 
           spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Still crawling.`)
         } else {
+          console.log(`[rex-spider] Adding ${spider.identifier()} to check...`)
+
           toCheck.push(spider)
         }
       }
 
       const startNextCrawl = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        console.log(`[rex-spider] ${toCheck.length} sites left to crawl...`)
+
         if (toCheck.length === 0) {
           sendResponse(response)
         } else {
