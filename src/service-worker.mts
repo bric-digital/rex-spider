@@ -274,7 +274,7 @@ export class REXSpider {
 
     return new Promise<REXSpiderCrawlResult>((resolve) => {
       resolve({
-        sitesCrawled: [],
+        sitesCrawled: [this.identifier()],
         issues: []
       })
     })
@@ -378,10 +378,6 @@ class REXSpiderModule extends REXServiceWorkerModule {
       for (const spider of this.registeredSpiders) {
         if (spider.isEnabled() === false) {
           // Do not log - spider is disabled.
-        } else if (spider.isCrawling()) {
-          console.log(`[rex-spider: ${spider.identifier()}] Still crawling. Skipping this round...`)
-
-          spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Still crawling.`)
         } else {
           console.log(`[rex-spider] Adding ${spider.identifier()} to check...`)
 
@@ -396,37 +392,42 @@ class REXSpiderModule extends REXServiceWorkerModule {
           sendResponse(response)
         } else {
           const spider = toCheck.pop()
-
+          
           if (spider !== undefined) {
-            console.log(`[rex-spider: ${spider.identifier()}] Starting crawl...`)
+            if (spider.isCrawling()) {
+              console.log(`[rex-spider: ${spider.identifier()}] Still crawling. Skipping this round...`)
 
-            spider.sleepElapsed().then((elapsed:boolean) => {
-              if (elapsed) {
+              spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Still crawling.`)
+            } else {
+              console.log(`[rex-spider: ${spider.identifier()}] Starting crawl...`)
 
-                spider.doBackgroundCrawl()
-                  .then((result:REXSpiderCrawlResult) => {
-                    if (response.sitesCrawled.includes(spider.identifier()) === false) {
-                      response.sitesCrawled.push(spider.identifier())
-                    }
+              spider.sleepElapsed().then((elapsed:boolean) => {
+                if (elapsed) {
+                  spider.doBackgroundCrawl()
+                    .then((result:REXSpiderCrawlResult) => {
+                      if (response.sitesCrawled.includes(spider.identifier()) === false) {
+                        response.sitesCrawled.push(spider.identifier())
+                      }
 
-                    for (const issue of result.issues) {
-                      response.issues.push(issue)
-                    }
+                      for (const issue of result.issues) {
+                        response.issues.push(issue)
+                      }
 
-                    console.log(`[rex-spider: ${spider.identifier()}] Finished crawl...`)
+                      console.log(`[rex-spider: ${spider.identifier()}] Finished crawl...`)
 
-                    startNextCrawl(sendResponse)
-                  })
-              } else {
+                      startNextCrawl(sendResponse)
+                    })
+                } else {
+                  console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
+                }
+              }).catch(() => {
                 console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
-              }
-            }).catch(() => {
-              console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
-  
-              spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Too soon to crawl again.`)
+    
+                spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Too soon to crawl again.`)
 
-              startNextCrawl(sendResponse)
-            })
+                startNextCrawl(sendResponse)
+              })
+            }
           }
         }
       }
