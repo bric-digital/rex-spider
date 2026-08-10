@@ -13,6 +13,11 @@ export interface REXSpiderCrawlResult {
   issues: REXSpiderIssue[]
 }
 
+export interface REXSpiderCrawlInspection {
+  id: string,
+  refresh: boolean
+}
+
 export class REXSpider {
   private enabled: boolean = true
   private startCrawl: number | null = null
@@ -389,19 +394,23 @@ class REXSpiderModule extends REXServiceWorkerModule {
           if (spider !== undefined) {
             // TODO: wrap call in watchdog / interruptable container.
 
-            spider.sleepElapsed().then(() => {
-              spider.doBackgroundCrawl()
-                .then((result:REXSpiderCrawlResult) => {
-                  if (response.sitesCrawled.includes(spider.identifier()) === false) {
-                    response.sitesCrawled.push(spider.identifier())
-                  }
+            spider.sleepElapsed().then((elapsed:boolean) => {
+              if (elapsed) {
+                spider.doBackgroundCrawl()
+                  .then((result:REXSpiderCrawlResult) => {
+                    if (response.sitesCrawled.includes(spider.identifier()) === false) {
+                      response.sitesCrawled.push(spider.identifier())
+                    }
 
-                  for (const issue of result.issues) {
-                    response.issues.push(issue)
-                  }
+                    for (const issue of result.issues) {
+                      response.issues.push(issue)
+                    }
 
-                  startNextCrawl(sendResponse)
-                })
+                    startNextCrawl(sendResponse)
+                  })
+              } else {
+                console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
+              }
             }).catch(() => {
               console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
   
