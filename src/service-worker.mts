@@ -1,5 +1,6 @@
 import { REXConfiguration } from '@bric/rex-core/common'
 import rexCorePlugin, { REXServiceWorkerModule, registerREXModule, dispatchEvent } from '@bric/rex-core/service-worker'
+import { Conversation } from '@bric/rex-types/types'
 
 import { REXSpiderModuleConfiguration, REXSpiderConfiguration } from './types.mjs'
 
@@ -15,7 +16,8 @@ export interface REXSpiderCrawlResult {
 
 export interface REXSpiderCrawlInspection {
   id: string,
-  refresh: boolean
+  refresh: boolean,
+  conversation?: Conversation
 }
 
 export class REXSpider {
