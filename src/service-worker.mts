@@ -17,7 +17,8 @@ export interface REXSpiderCrawlResult {
 export interface REXSpiderCrawlInspection {
   id: string,
   refresh: boolean,
-  conversation?: Conversation
+  conversation?: Conversation,
+  lookupDate: DateString,
 }
 
 export class REXSpider {
