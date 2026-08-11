@@ -3,7 +3,8 @@ export interface REXSpiderConfiguration {
     start?: number,
     end?: number,
     time_anchor?: 'install' | 'runtime' | 'absolute',
-    crawl_delay?: number
+    crawl_delay?: number,
+    halt_on_error?: boolean
 }
 
 export interface REXSpiderModuleConfiguration {

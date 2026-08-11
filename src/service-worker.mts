@@ -1,6 +1,6 @@
 import { REXConfiguration } from '@bric/rex-core/common'
 import rexCorePlugin, { REXServiceWorkerModule, registerREXModule, dispatchEvent } from '@bric/rex-core/service-worker'
-import { Conversation } from '@bric/rex-types/types'
+import { Conversation, DateString } from '@bric/rex-types/types'
 
 import { REXSpiderModuleConfiguration, REXSpiderConfiguration } from './types.mjs'
 
@@ -24,6 +24,7 @@ export class REXSpider {
   private enabled: boolean = true
   private startCrawl: number | null = null
   private endCrawl: number | null = null
+  private haltOnError: boolean = true
   private timeAnchor: 'install' | 'runtime' | 'absolute' = 'runtime'
 
   private sleepDuration: number = 300000 // 5 minutes
@@ -52,6 +53,10 @@ export class REXSpider {
     if (configuration['crawl_delay'] !== undefined) {
       this.crawlDelay = configuration['crawl_delay']
     }
+
+    if (configuration['halt_on_error'] === false) {
+      this.haltOnError = false
+    }
   }
 
   isEnabled(): boolean {
@@ -64,6 +69,10 @@ export class REXSpider {
 
   isCrawling(): boolean {
     return this.crawling
+  }
+
+  continueAfterError(): boolean {
+    return this.haltOnError === false
   }
 
   private prepareCrawl() {
@@ -280,7 +289,15 @@ export class REXSpider {
     })
   }
 
-  checkIfAlreadyTransmitted(uploadKey:string): Promise<boolean> {
+  private fetchUploadKey(convoId: string, updated:DateString): string {
+    const timestamp:number = Math.floor(updated.timestamp())
+
+    return `rex-spider-${this.identifier()}-conversation-upload-${convoId}-${timestamp}`
+  }
+
+  checkIfAlreadyTransmitted(identifier: string, updated:DateString): Promise<boolean> {
+    const uploadKey = this.fetchUploadKey(identifier, updated)
+
     return new Promise<boolean>((resolve) => {
       const fetchTransmission = {
         messageType: 'fetchValue',
@@ -297,7 +314,9 @@ export class REXSpider {
     })
   }
 
-  logTransmitted(uploadKey:string): Promise<void> {
+  logTransmitted(identifier: string, updated:DateString): Promise<void> {
+    const uploadKey = this.fetchUploadKey(identifier, updated)
+
     return new Promise<void>((resolve) => {
       const logTimestamp = {
         messageType: 'storeValue',
