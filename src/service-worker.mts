@@ -2,7 +2,7 @@ import { REXConfiguration } from '@bric/rex-core/common'
 import rexCorePlugin, { REXServiceWorkerModule, registerREXModule, dispatchEvent } from '@bric/rex-core/service-worker'
 import { Conversation, DateString } from '@bric/rex-types/types'
 
-import { REXSpiderModuleConfiguration, REXSpiderConfiguration } from './types.mjs'
+import { REXSpiderModuleConfiguration, REXSpiderConfiguration, REXStackOperator } from './types.mjs'
 
 export interface REXSpiderIssue {
   url: string,
@@ -393,7 +393,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
         issues: []
       }
 
-      const toCheck:REXSpider[] = []
+      const spidersToCrawl:REXStackOperator<REXSpider> = new REXStackOperator<REXSpider>()
 
       for (const spider of this.registeredSpiders) {
         if (spider.isEnabled() === false) {
@@ -401,58 +401,61 @@ class REXSpiderModule extends REXServiceWorkerModule {
         } else {
           console.log(`[rex-spider] Adding ${spider.identifier()} to check...`)
 
-          toCheck.push(spider)
+          spidersToCrawl.push(spider)
         }
       }
 
-      const startNextCrawl = (sendResponse:any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-        console.log(`[rex-spider] ${toCheck.length} sites left to crawl...`)
+      spidersToCrawl.run((spider:REXSpider):Promise<void> => {
+        return new Promise<void>((spiderResolve) => {
+          if (spider.isCrawling()) {
+            console.log(`[rex-spider: ${spider.identifier()}] Still crawling. Skipping this round...`)
 
-        if (toCheck.length === 0) {
-          sendResponse(response)
-        } else {
-          const spider = toCheck.pop()
-          
-          if (spider !== undefined) {
-            if (spider.isCrawling()) {
-              console.log(`[rex-spider: ${spider.identifier()}] Still crawling. Skipping this round...`)
+            spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Still crawling.`)
 
-              spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Still crawling.`)
-            } else {
-              console.log(`[rex-spider: ${spider.identifier()}] Starting crawl...`)
+            spiderResolve()
+          } else {
+            console.log(`[rex-spider: ${spider.identifier()}] Starting crawl...`)
 
-              spider.sleepElapsed().then((elapsed:boolean) => {
-                if (elapsed) {
-                  spider.doBackgroundCrawl()
-                    .then((result:REXSpiderCrawlResult) => {
-                      if (response.sitesCrawled.includes(spider.identifier()) === false) {
-                        response.sitesCrawled.push(spider.identifier())
+            spider.sleepElapsed().then((elapsed:boolean) => {
+              if (elapsed) {
+                spider.doBackgroundCrawl()
+                  .then((result:REXSpiderCrawlResult) => {
+                    if (response.sitesCrawled.includes(spider.identifier()) === false) {
+                      response.sitesCrawled.push(spider.identifier())
+                    }
+
+                    for (const identifier of result.sitesCrawled) {
+                      if (response.sitesCrawled.includes(identifier) === false) {
+                        response.sitesCrawled.push(identifier)
                       }
+                    }
 
-                      for (const issue of result.issues) {
-                        response.issues.push(issue)
-                      }
+                    for (const issue of result.issues) {
+                      response.issues.push(issue)
+                    }
 
-                      console.log(`[rex-spider: ${spider.identifier()}] Finished crawl...`)
+                    console.log(`[rex-spider: ${spider.identifier()}] Finished crawl...`)
 
-                      startNextCrawl(sendResponse)
-                    })
-                } else {
-                  console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
-                }
-              }).catch(() => {
+                    spiderResolve()
+                  })
+              } else {
                 console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
-    
-                spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Too soon to crawl again.`)
 
-                startNextCrawl(sendResponse)
-              })
-            }
+                spiderResolve()
+              }
+            }).catch(() => {
+              console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
+  
+              spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Too soon to crawl again.`)
+
+              spiderResolve()
+            })
           }
-        }
-      }
-
-      startNextCrawl(sendResponse)
+        })
+      })
+      .then(() => {
+        sendResponse(response)
+      })
 
       return true
     } else if (message.messageType === 'fetchAllowedURLs') {
