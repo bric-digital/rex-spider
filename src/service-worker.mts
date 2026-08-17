@@ -1,8 +1,8 @@
 import { REXConfiguration } from '@bric/rex-core/common'
 import rexCorePlugin, { REXServiceWorkerModule, registerREXModule, dispatchEvent } from '@bric/rex-core/service-worker'
-import { Conversation, DateString } from '@bric/rex-types/types'
+import { Conversation, DateString, REXStackOperator } from '@bric/rex-types/types'
 
-import { REXSpiderModuleConfiguration, REXSpiderConfiguration, REXStackOperator } from './types.mjs'
+import { REXSpiderModuleConfiguration, REXSpiderConfiguration } from './types.mjs'
 
 export interface REXSpiderIssue {
   url: string,
