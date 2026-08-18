@@ -102,6 +102,8 @@ export class REXSpider {
 
         const now: number = Date.now()
 
+        console.log(`[rex-spider-${this.identifier()}] Checking sleep duration: last: ${lastCrawlStarted}, now: ${now}, delta: ${now - lastCrawlStarted}, limit: ${this.crawlDelay}`)
+
         if ((now - lastCrawlStarted) > this.crawlDelay) {
           resolve(true)
         }
@@ -289,6 +291,8 @@ export class REXSpider {
   }
 
   private fetchUploadKey(convoId: string, updated:DateString): string {
+    console.log(`[rex-spider-${this.identifier()}] updated: ${updated}, original: ${updated.originalValue}`)
+    
     const timestamp:number = Math.floor(updated.timestamp())
 
     return `rex-spider-${this.identifier()}-conversation-upload-${convoId}-${timestamp}`
