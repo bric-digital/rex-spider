@@ -28,7 +28,8 @@ export class REXSpider {
   private haltOnError: boolean = true
   private timeAnchor: 'install' | 'runtime' | 'absolute' = 'runtime'
 
-  private crawlDelay: number = 300000 // 5 minutes, by default - may be configured
+  private crawlDelay: number = 30000 // 30 seconds, by default - may be configured
+  private sleepDelay: number = 300000 // 5 minutes, by default - may be configured
 
   private crawling: boolean = false
 
@@ -51,6 +52,10 @@ export class REXSpider {
 
     if (configuration['crawl_delay'] !== undefined) {
       this.crawlDelay = configuration['crawl_delay']
+    }
+
+    if (configuration['sleep_delay'] !== undefined) {
+      this.sleepDelay = configuration['sleep_delay']
     }
 
     if (configuration['halt_on_error'] === false) {
@@ -102,7 +107,7 @@ export class REXSpider {
 
         const now: number = Date.now()
 
-        if ((now - lastCrawlStarted) > this.crawlDelay) {
+        if ((now - lastCrawlStarted) > this.sleepDelay) {
           resolve(true)
         }
 
