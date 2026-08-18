@@ -28,9 +28,7 @@ export class REXSpider {
   private haltOnError: boolean = true
   private timeAnchor: 'install' | 'runtime' | 'absolute' = 'runtime'
 
-  private sleepDuration: number = 300000 // 5 minutes
-
-  private crawlDelay: number = 30000
+  private crawlDelay: number = 300000 // 5 minutes, by default - may be configured
 
   private crawling: boolean = false
 
@@ -104,7 +102,7 @@ export class REXSpider {
 
         const now: number = Date.now()
 
-        if ((now - lastCrawlStarted) > this.sleepDuration) {
+        if ((now - lastCrawlStarted) > this.crawlDelay) {
           resolve(true)
         }
 
@@ -414,10 +412,10 @@ class REXSpiderModule extends REXServiceWorkerModule {
 
             spiderResolve()
           } else {
-            console.log(`[rex-spider: ${spider.identifier()}] Starting crawl...`)
-
             spider.sleepElapsed().then((elapsed:boolean) => {
               if (elapsed) {
+                console.log(`[rex-spider: ${spider.identifier()}] Starting crawl ${new Date()}...`)
+
                 spider.doBackgroundCrawl()
                   .then((result:REXSpiderCrawlResult) => {
                     if (response.sitesCrawled.includes(spider.identifier()) === false) {
@@ -435,6 +433,13 @@ class REXSpiderModule extends REXServiceWorkerModule {
                     }
 
                     console.log(`[rex-spider: ${spider.identifier()}] Finished crawl...`)
+
+                    spiderResolve()
+                  })
+                  .catch((err) => {
+                    console.log(`[rex-spider: ${spider.identifier()}] Error encountered on crawl: ${err}`)
+
+                    spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Error encountered on crawl: ${err}`)
 
                     spiderResolve()
                   })
