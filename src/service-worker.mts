@@ -267,7 +267,7 @@ export class REXSpider {
     })
   }
 
-  signalCrawlComplete(crawledCount: number, crawledIds: string[] = [], reason:string = 'None given') {
+  signalCrawlComplete(crawledCount: number, crawledIds: string[] = [], reason:string = 'None given', clearFlag:boolean = true) {
     dispatchEvent({
       name: 'pdk-app-event',
       event_name: `rex-spider-${this.identifier()}-complete`,
@@ -279,7 +279,17 @@ export class REXSpider {
       }
     })
 
-    this.crawling = false
+    if (clearFlag) {
+      const storeMessage = {
+        messageType: 'storeValue',
+        key: `rex-spider-${this.identifier()}-last-crawl`,
+        value: Date.now()
+      }
+
+      rexCorePlugin.handleMessage(storeMessage, this, (response) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
+        this.crawling = false
+      })
+    }
   }
 
   doBackgroundCrawl():Promise<REXSpiderCrawlResult> {
@@ -413,7 +423,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
           if (spider.isCrawling()) {
             console.log(`[rex-spider: ${spider.identifier()}] Still crawling. Skipping this round...`)
 
-            spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Still crawling.`)
+            spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Still crawling.`, false)
 
             spiderResolve()
           } else {
@@ -456,7 +466,7 @@ class REXSpiderModule extends REXServiceWorkerModule {
             }).catch(() => {
               console.log(`[rex-spider: ${spider.identifier()}] Too soon to crawl again. Skipping this round...`)
   
-              spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Too soon to crawl again.`)
+              spider.signalCrawlComplete(-1, [], `[${spider.identifier()}] Too soon to crawl again.`, false)
 
               spiderResolve()
             })
