@@ -31,6 +31,10 @@ export class REXSpider {
   private crawlDelay: number = 30000 // 30 seconds, by default - may be configured
   private sleepDelay: number = 300000 // 5 minutes, by default - may be configured
 
+  private recrawlDelay: number = 0
+
+  private summarize: boolean = false
+
   private crawling: boolean = false
 
   updateConfiguration(configuration:REXSpiderConfiguration) {
@@ -61,6 +65,18 @@ export class REXSpider {
     if (configuration['halt_on_error'] === false) {
       this.haltOnError = false
     }
+
+    if (configuration.summarize === true) {
+      this.summarize = true
+    }
+  }
+
+  justSummarize(): boolean {
+    return this.summarize
+  }
+
+  addRecrawlDelay(delay:number) {
+    this.recrawlDelay += delay
   }
 
   isEnabled(): boolean {
@@ -88,6 +104,7 @@ export class REXSpider {
 
     rexCorePlugin.handleMessage(storeMessage, this, (response) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
       this.crawling = true
+      this.recrawlDelay = 0
     })
   }
 
@@ -107,7 +124,7 @@ export class REXSpider {
 
         const now: number = Date.now()
 
-        if ((now - lastCrawlStarted) > this.sleepDelay) {
+        if ((now - lastCrawlStarted) > this.sleepDelay + this.recrawlDelay) {
           resolve(true)
         }
 
