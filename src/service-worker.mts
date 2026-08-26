@@ -324,7 +324,7 @@ export class REXSpider {
   }
 
   private fetchUploadKey(convoId: string, updated:DateString): string {
-    const timestamp:number = Math.floor(updated.timestamp())
+    const timestamp:number = Math.round(updated.timestamp())
 
     return `rex-spider-${this.identifier()}-conversation-upload-${convoId}-${timestamp}`
   }
