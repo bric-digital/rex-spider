@@ -20,6 +20,7 @@ export interface REXSpiderCrawlInspection {
   lookupDate: DateString,
   conversation?: Conversation,
   startDate?: DateString,
+  updateDate?: DateString,
   title?: string
 }
 
