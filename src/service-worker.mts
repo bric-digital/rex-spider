@@ -1,3 +1,5 @@
+import check from 'check-types'
+
 import { REXConfiguration } from '@bric/rex-core/common'
 import rexCorePlugin, { REXServiceWorkerModule, registerREXModule, dispatchEvent } from '@bric/rex-core/service-worker'
 import { Conversation, DateString, REXStackOperator } from '@bric/rex-types/types'
@@ -190,6 +192,10 @@ export class REXSpider {
 
   crawlWindowContains(timestamp:number): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
+      if (check.number(timestamp) === false) {
+        resolve(false)
+      }
+
       this.crawlWindowStart().then((startTime:number | null) => {
         if (startTime !== null && timestamp < startTime) {
           resolve(false)
@@ -330,22 +336,28 @@ export class REXSpider {
   }
 
   checkIfAlreadyTransmitted(identifier: string, updated:DateString): Promise<boolean> {
-    const uploadKey = this.fetchUploadKey(identifier, updated)
+    try {
+      const uploadKey = this.fetchUploadKey(identifier, updated)
 
-    return new Promise<boolean>((resolve) => {
-      const fetchTransmission = {
-        messageType: 'fetchValue',
-        key: uploadKey
-      }
-
-      rexCorePlugin.handleMessage(fetchTransmission, this, (response) => {
-        if (response !== null) {
-          resolve(true)
-        } else {
-          resolve(false)
+      return new Promise<boolean>((resolve) => {
+        const fetchTransmission = {
+          messageType: 'fetchValue',
+          key: uploadKey
         }
+
+        rexCorePlugin.handleMessage(fetchTransmission, this, (response) => {
+          if (response !== null) {
+            resolve(true)
+          } else {
+            resolve(false)
+          }
+        })
       })
-    })
+    } catch (err) {
+      return new Promise<boolean>((resolve) => {
+        resolve(false)
+      })
+    }
   }
 
   logTransmitted(identifier: string, updated:DateString): Promise<void> {
@@ -381,22 +393,28 @@ class REXSpiderModule extends REXServiceWorkerModule {
   }
 
   refreshConfiguration() {
-    rexCorePlugin.fetchConfiguration()
-      .then((configuration:REXConfiguration) => {
-        if (configuration !== undefined) {
-          const spiderConfig = (configuration as any)['spider'] // eslint-disable-line @typescript-eslint/no-explicit-any
+    rexCorePlugin.fetchConfiguration().then((configuration:REXConfiguration) => {
+      if (configuration !== undefined) {
+        const spiderConfig = (configuration as any)['spider'] // eslint-disable-line @typescript-eslint/no-explicit-any
 
-          if (spiderConfig !== undefined) {
-            this.updateConfiguration(spiderConfig)
+        if (spiderConfig !== undefined) {
+          this.updateConfiguration(spiderConfig)
 
-            return
-          }
+          return
         }
+      }
 
-        setTimeout(() => {
-          this.refreshConfiguration()
-        }, 1000)
-      })
+      setTimeout(() => {
+        this.refreshConfiguration()
+      }, 1000)
+    }).catch((err) => {
+      console.log(`[rex-spider] Unable to fetch configuration: ${err}`)
+
+      // Back off if there's an error
+      setTimeout(() => {
+        this.refreshConfiguration()
+      }, 5000)
+    })
   }
 
   updateConfiguration(config:REXSpiderModuleConfiguration) {
