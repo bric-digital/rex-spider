@@ -354,6 +354,8 @@ export class REXSpider {
         })
       })
     } catch (err) {
+      console.log(`[${this.identifier()}]  Error checking if "${identifier}" already transmited: ${err}`)
+
       return new Promise<boolean>((resolve) => {
         resolve(false)
       })
