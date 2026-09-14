@@ -429,7 +429,17 @@ class REXSpiderModule extends REXServiceWorkerModule {
         const spiderConfig:REXSpiderConfiguration|undefined = spiderConfigs[spider.identifier()]
 
         if (spiderConfig !== undefined) {
-          spider.updateConfiguration(spiderConfig)
+          const mergedConfig:REXSpiderConfiguration = {
+            enabled: true
+          }
+
+          if (defaultConfig !== undefined) {
+            Object.assign(mergedConfig, defaultConfig)
+          }
+
+          Object.assign(mergedConfig, spiderConfig)
+
+          spider.updateConfiguration(mergedConfig)
         } else if (defaultConfig !== undefined) {
           spider.updateConfiguration(defaultConfig)
         }
