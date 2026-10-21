@@ -312,7 +312,7 @@ export class REXSpider {
         value: Date.now()
       }
 
-      rexCorePlugin.handleMessage(storeMessage, this, (response) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
+      rexCorePlugin.handleMessage(storeMessage, null, (response) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
         this.crawling = false
       })
     }
@@ -345,7 +345,7 @@ export class REXSpider {
           key: uploadKey
         }
 
-        rexCorePlugin.handleMessage(fetchTransmission, this, (response) => {
+        rexCorePlugin.handleMessage(fetchTransmission, null, (response) => {
           if (response !== null) {
             resolve(true)
           } else {
@@ -372,7 +372,7 @@ export class REXSpider {
         value: Date.now()
       }
 
-      rexCorePlugin.handleMessage(logTimestamp, this, (response) => { // eslint-disable-line @typescript-eslint/no-unused-vars
+      rexCorePlugin.handleMessage(logTimestamp, null, (response) => { // eslint-disable-line @typescript-eslint/no-unused-vars
         resolve()
       })
     })
