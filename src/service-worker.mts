@@ -107,7 +107,7 @@ export class REXSpider {
       value: Date.now()
     }
 
-    rexCorePlugin.handleMessage(storeMessage, this, (response) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
+    rexCorePlugin.handleMessage(storeMessage, null, (response) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
       this.crawling = true
       this.recrawlDelay = 0
     })
@@ -120,7 +120,7 @@ export class REXSpider {
         key: `rex-spider-${this.identifier()}-last-crawl`
       }
 
-      rexCorePlugin.handleMessage(fetchLastCrawl, this, (response) => {
+      rexCorePlugin.handleMessage(fetchLastCrawl, null, (response) => {
         let lastCrawlStarted = 0 
 
         if (response !== null) {
@@ -147,7 +147,7 @@ export class REXSpider {
           messageType: 'getInstallTime'
         }
 
-        rexCorePlugin.handleMessage(message, this, (response: number | null) => {
+        rexCorePlugin.handleMessage(message, null, (response: number | null) => {
           if (response === null || this.startCrawl === null) {
             resolve(null)
           } else {
@@ -173,7 +173,7 @@ export class REXSpider {
           messageType: 'getInstallTime'
         }
 
-        rexCorePlugin.handleMessage(message, this, (response: number | null) => {
+        rexCorePlugin.handleMessage(message, null, (response: number | null) => {
           if (response === null || this.endCrawl === null) {
             resolve(null)
           } else {
